@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESG Issues in Energy Industry</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        #overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 300px;
+        }
+        #overlay h2 {
+            margin: 0 0 10px;
+            font-size: 18px;
+        }
+        #overlay p {
+            font-size: 14px;
+        }
+        #quiz {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 400px;
+            display: none;
+        }
+        #quiz h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        #quiz button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="overlay">
+        <h2>ESG in Energy Industry</h2>
+        <p>Click the spheres to learn more about Environmental, Social, and Governance issues!</p>
+    </div>
+
+    <div id="quiz">
+        <h3 id="quiz-question">Question will appear here</h3>
+        <div id="quiz-options"></div>
+        <button id="quiz-next">Next</button>
+    </div>
+
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Create spheres representing ESG categories
+        const spheres = [];
+        const materials = [
+            new THREE.MeshBasicMaterial({ color: 0x4CAF50 }), // Environmental
+            new THREE.MeshBasicMaterial({ color: 0x2196F3 }), // Social
+            new THREE.MeshBasicMaterial({ color: 0xFFC107 })  // Governance
+        ];
+
+        const labels = ["Environmental", "Social", "Governance"];
+        const details = [
+            "Environmental issues include climate change, resource depletion, and pollution.",
+            "Social issues involve community engagement, health and safety, and human rights.",
+            "Governance issues focus on transparency, compliance, and anti-corruption."
+        ];
+
+        for (let i = 0; i < 3; i++) {
+            const geometry = new THREE.SphereGeometry(1, 32, 32);
+            const sphere = new THREE.Mesh(geometry, materials[i]);
+            sphere.position.set(i * 3 - 3, 0, -5);
+            sphere.userData = { label: labels[i], detail: details[i] };
+            scene.add(sphere);
+            spheres.push(sphere);
+        }
+
+        // Camera position
+        camera.position.z = 5;
+
+        // Raycaster for interaction
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        // Interaction overlay
+        const overlay = document.getElementById('overlay');
+
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        }
+
+        function onClick() {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(spheres);
+
+            if (intersects.length > 0) {
+                const sphere = intersects[0].object;
+                const { label, detail } = sphere.userData;
+                overlay.innerHTML = `<h2>${label}</h2><p>${detail}</p>`;
+                showQuiz(label);
+            }
+        }
+
+        window.addEventListener('mousemove', onMouseMove, false);
+        window.addEventListener('click', onClick, false);
+
+        // Quiz functionality
+        const quiz = document.getElementById('quiz');
+        const quizQuestion = document.getElementById('quiz-question');
+        const quizOptions = document.getElementById('quiz-options');
+        const quizNext = document.getElementById('quiz-next');
+
+        const quizData = {
+            Environmental: [
+                { question: "What is a major contributor to climate change?", options: ["Deforestation", "Fossil Fuels", "Agriculture"], answer: "Fossil Fuels" },
+                { question: "What can help reduce pollution?", options: ["Recycling", "Using Plastics", "Burning Coal"], answer: "Recycling" }
+            ],
+            Social: [
+                { question: "What is a key social issue in energy projects?", options: ["Community Engagement", "Energy Costs", "Efficiency"], answer: "Community Engagement" },
+                { question: "What ensures worker safety?", options: ["Protective Equipment", "High Wages", "More Holidays"], answer: "Protective Equipment" }
+            ],
+            Governance: [
+                { question: "What promotes corporate transparency?", options: ["Public Reports", "Secrecy", "Tax Avoidance"], answer: "Public Reports" }
+            ]
+        };
+
+        let currentQuiz = [];
+        let currentIndex = 0;
+
+        function showQuiz(label) {
+            currentQuiz = quizData[label];
+            currentIndex = 0;
+            displayQuestion();
+            quiz.style.display = "block";
+        }
+
+        function displayQuestion() {
+            const current = currentQuiz[currentIndex];
+            quizQuestion.textContent = current.question;
+            quizOptions.innerHTML = "";
+            current.options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => checkAnswer(option, current.answer);
+                quizOptions.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selected, correct) {
+            if (selected === correct) {
+                alert("Correct!");
+            } else {
+                alert("Wrong! The correct answer is: " + correct);
+            }
+            currentIndex++;
+            if (currentIndex < currentQuiz.length) {
+                displayQuestion();
+            } else {
+                alert("Quiz Completed!");
+                quiz.style.display = "none";
+            }
+        }
+
+        quizNext.addEventListener('click', () => {
+            currentIndex++;
+            if (currentIndex < currentQuiz.length) {
+                displayQuestion();
+            } else {
+                alert("Quiz Completed!");
+                quiz.style.display = "none";
+            }
+        });
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            spheres.forEach((sphere, index) => {
+                sphere.rotation.y += 0.01;
+                sphere.position.y = Math.sin(Date.now() * 0.002 + index) * 0.5;
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
